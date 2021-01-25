@@ -40,7 +40,7 @@ def getPieceSize(im):
 
 def makePieces(im, pieceSize):
     pieceArray = []
-    for y in range(0, im.height, pieceSize):
+    for y in range(0, im.height - pieceSize, pieceSize):
         pieceArray.append([])
         for x in range(0, im.width, pieceSize):
             newPiece = im.crop((x, y, x + pieceSize, y + pieceSize))
@@ -51,7 +51,7 @@ def makePieces(im, pieceSize):
 def loadPuzzle(pieceArray, pieceSize, shuffle=False):
     print(len(pieceArray[0]), len(pieceArray))
     puzzle = Image.new(
-        'RGB', (len(pieceArray[0][:-1]) * (pieceSize + 1), len(pieceArray) * (pieceSize + 1)))
+        'RGB', (len(pieceArray[0]) * (pieceSize + 1), len(pieceArray) * (pieceSize + 1)))
     pieceY = 0
     if shuffle:
         random.shuffle(pieceArray)
@@ -67,11 +67,11 @@ def loadPuzzle(pieceArray, pieceSize, shuffle=False):
     return puzzle
 
 
-def resizeImageToFitWindow(img):
-    if img.width > SCREENSIZE[0]:
-        img = img.resize((int(img.width * (SCREENSIZE[0] / img.width)), int(img.height * (SCREENSIZE[0] / img.width))))
-    if img.height > SCREENSIZE[1]:
-        img = img.resize((int(img.width * (SCREENSIZE[1] / img.height)), int(img.height * (SCREENSIZE[1] / img.height))))
+def resizeImageToFitWindow(img, pieceSize):
+    if img.width + pieceSize > SCREENSIZE[0]:
+        img = img.resize((int(img.width * (SCREENSIZE[0] / (img.width + pieceSize))), int(img.height * (SCREENSIZE[0] / (img.width + pieceSize)))))
+    if img.height + pieceSize > SCREENSIZE[1]:
+        img = img.resize((int(img.width * (SCREENSIZE[1] / (img.height + pieceSize))), int(img.height * (SCREENSIZE[1] / (img.height + pieceSize)))))
     return img
 
 
@@ -92,7 +92,7 @@ def createPieceStrPickle(pieceArray):
     pieceStr = []
     for y in pieceArray:
         pieceStr.append([])
-        for piece in y[:-1]:
+        for piece in y:
             pieceStr[-1].append(piece.tobytes())
     with open('pieceStr.pickle', 'wb') as f:
         pickle.dump(pieceStr, f)
@@ -109,9 +109,9 @@ def main():
     )
     im = Image.open("images/" + imageName)
     print(im.size)
-    im = resizeImageToFitWindow(im)
     print(im.size)
     pieceSize = getPieceSize(im)
+    im = resizeImageToFitWindow(im, pieceSize)
     shuffle = (
         input('Should I shuffle the pieces? (y or n) > ').lower().startswith('y'))
     pieceArray = makePieces(im, pieceSize)
@@ -125,7 +125,6 @@ def main():
         f"Created a {im.width // pieceSize} by {im.height // pieceSize} puzzle with {numPieces} pieces"
     )
     puzzle = loadPuzzle(pieceArray, pieceSize, shuffle)
-    puzzle = resizeImageToFitWindow(puzzle)
 
     puzzle.save('puzzleGridShuffled.png')
     createPieceStrPickle(pieceArray)
