@@ -40,26 +40,27 @@ def getPieceSize(im):
 
 def makePieces(im, pieceSize):
     pieceArray = []
-    for y in range(0, im.height, pieceSize):
+    for y in range((im.height // pieceSize)):
         pieceArray.append([])
-        for x in range(0, im.width - pieceSize, pieceSize):
-            newPiece = im.crop((x, y, x + pieceSize, y + pieceSize))
+        for x in range((im.width // pieceSize)):
+            newPiece = im.crop((x * pieceSize, y * pieceSize, (x + 1) * (pieceSize), (y + 1) * pieceSize))
             pieceArray[-1].append(newPiece)
     return pieceArray
 
 
 def loadPuzzle(pieceArray, pieceSize, shuffle=False):
+    arr = pieceArray[:]
     print(len(pieceArray[0]), len(pieceArray))
     puzzle = Image.new(
         'RGB', (len(pieceArray[0]) * (pieceSize + 1), len(pieceArray) * (pieceSize + 1)))
     pieceY = 0
-    pieces = pieceArray[:]
+    pieces = arr
     if shuffle:
-        shuffledPieces = random.sample(pieceArray[:], len(pieceArray[:]))
-        for x in shuffledPieces:
+        random.shuffle(arr)
+        for x in arr:
             random.shuffle(x)
-        createPieceStrPickle(shuffledPieces, 'shuffledPieceStr.pickle')
-        pieces = shuffledPieces
+        #createPieceStrPickle(arr, 'shuffledPieceStr.pickle')
+        pieces = arr
     for y in pieces:
         pieceX = 0
         for piece in y:
@@ -79,9 +80,10 @@ def resizeImageToFitWindow(img, pieceSize):
 
 def convertPiecesToRGB(pieceArray):
     rgbArray = []
-    for y, row in enumerate(pieceArray):
+    for row in pieceArray:
         rgbArray.append([])
-        for x, piece in enumerate(row):
+        for piece in row:
+            print(piece)
             rgbArray[-1].append([])
             for py in range(piece.width):
                 rgbArray[-1][-1].append([])
